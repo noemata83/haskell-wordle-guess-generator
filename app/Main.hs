@@ -106,11 +106,9 @@ getResultInput = do
       getResultInput
 
 playRound :: Int -> [Wrd] -> [Char] -> [Char] -> IO ()
-
-playround 0 wordList lstGuess lstResult = do
+playRound 0 wordList lstGuess lstResult = do
   putStrLn "Better luck next time!"
   return ()
-
 playRound rnd wordList lstGuess lstResult = do
   let remainingWords = processLastWord lstGuess lstResult wordList
   let guess = generateGuess remainingWords
