@@ -100,12 +100,17 @@ getResultInput :: IO String
 getResultInput = do
   result <- getLine
   if all (\x -> x `elem` ['G', 'Y', 'X']) (map toUpper result) && length result == 5
-    then return result
+    then return (map toUpper result)
     else do
       putStrLn "Invalid input. Try again"
       getResultInput
 
 playRound :: Int -> [Wrd] -> [Char] -> [Char] -> IO ()
+
+playround 0 wordList lstGuess lstResult = do
+  putStrLn "Better luck next time!"
+  return ()
+
 playRound rnd wordList lstGuess lstResult = do
   let remainingWords = processLastWord lstGuess lstResult wordList
   let guess = generateGuess remainingWords
@@ -114,10 +119,6 @@ playRound rnd wordList lstGuess lstResult = do
   if all ((== 'G') . toUpper) result
     then putStrLn "Hurray!"
     else playRound (rnd - 1) remainingWords guess result
-  return ()
-
-playround 0 wordList lstGuess lstResult = do
-  putStrLn "Better luck next time!"
   return ()
 
 main :: IO ()
