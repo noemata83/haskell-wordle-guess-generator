@@ -1,6 +1,6 @@
 # A Haskell Wordle Guess Generator (v0.0.1)
 
-This is my first toy Haskell program. It has been carefully designed to take the simple and sometimes delightful word-guessing game, Wordle, and suck any remaining joy out of it.
+This is my first toy Haskell program. It has been carefully designed with the intent take the simple and sometimes delightful word-guessing game, Wordle, and suck any remaining joy out of it.
 
 But it was fun to build.
 
