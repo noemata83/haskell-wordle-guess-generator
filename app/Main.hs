@@ -6,6 +6,7 @@ module Main where
 import Data.Char
 import Data.Foldable
 import Data.List (nub, sort)
+import Debug.Trace
 
 type Letter = Char
 
@@ -28,7 +29,10 @@ data LetterPositionScore = LetterPositionScore
   }
   deriving (Show, Eq, Ord)
 
-data WordScore = WordScore Score Wrd deriving (Show, Eq, Ord)
+data WordScore = WordScore Score Wrd deriving (Eq, Ord)
+
+instance Show WordScore where
+  show (WordScore s w) = " " ++ w ++ " (" ++ show s ++ ")"
 
 scoreWords :: [LetterScore] -> [LetterPositionScore] -> [Wrd] -> [WordScore]
 scoreWords ls lps = map (scoreWord ls lps)
@@ -72,22 +76,27 @@ extractWord :: WordScore -> Wrd
 extractWord (WordScore _ w) = w
 
 generateGuess :: [Wrd] -> Wrd
-generateGuess words =
+generateGuess words = trace ("I am considering: " ++ (show $ take 5 $ reverse $ sort wordScores)) $
   extractWord $ maximum wordScores
   where
     wordScores = scoreWords (scoreLetters words) (scoreLetterPositions words) words
 
 processLastWord :: [Char] -> [Char] -> [Wrd] -> [Wrd]
 processLastWord lstGuess lstGuessResult wordList =
-  foldr (\x wrds -> processLetterResult (snd x) (fst x) wrds) wordList intermediateResult
+  foldr (\x wrds -> processLetterResult (snd x) (fst x) correctLetters wrds) wordList indexedIntermediateResult
   where
-    intermediateResult = zip [0 .. length lstGuess] (zip lstGuess lstGuessResult)
+    intermediateResult = (zip lstGuess lstGuessResult)
+    indexedIntermediateResult = zip [0 .. length lstGuess] intermediateResult
+    correctLetters = map (\x -> fst x) $ filter (\x -> snd x == 'G' || snd x == 'Y') intermediateResult
 
-processLetterResult :: (Char, Char) -> Position -> [Wrd] -> [Wrd]
-processLetterResult (l, 'G') p words = filter (\wrd -> wrd !! p == l) words
-processLetterResult (l, 'Y') p words = filter (\wrd -> wrd !! p /= l && l `elem` wrd) words
-processLetterResult (l, 'X') p words = filter (notElem l) words
-processLetterResult (l, _) _ words = words
+processLetterResult :: (Char, Char) -> Position -> [Char] -> [Wrd] -> [Wrd]
+processLetterResult (l, 'G') p _ words = filter (\wrd -> wrd !! p == l) words
+processLetterResult (l, 'Y') p _ words = filter (\wrd -> wrd !! p /= l && l `elem` wrd) words
+processLetterResult (l, 'X') p correct words = filter (\wrd -> countOf l wrd <= countOf l correct) words
+processLetterResult (l, _) _ _ words = words
+
+countOf :: Char -> [Char] -> Int
+countOf x = length . filter (==x)
 
 getLastResult :: IO String
 getLastResult =
@@ -115,12 +124,15 @@ playRound rnd wordList lstGuess lstResult = do
   putStrLn $ "I guess: " ++ guess
   result <- getLastResult
   if all ((== 'G') . toUpper) result
-    then putStrLn "Hurray!"
+    then do
+      putStrLn "Hurray!"
+      putStrLn $ "I guessed the word in " ++ show (7 - rnd)
+      return ()
     else playRound (rnd - 1) remainingWords guess result
   return ()
 
 main :: IO ()
 main = do
-  wordFile <- readFile "words.txt"
+  wordFile <- readFile "answers.txt"
   let words :: [String] = lines wordFile
   playRound 6 words [] []
